@@ -30,15 +30,18 @@ class TweetController extends Controller
         return response()->json(array('detail'=> $tweets, 'count'=> $count));
     }
 
+    public function delete(Request $request) {
+        Tweet::where('id', $request->id)->delete();
+        return response()->json('Deleted!');
+    }
+
     public function newsfeed(Request $request) {
         $followings = $request->followings;
         foreach($followings as $following){
             $tweets = Tweet::where('user_id',$request->id)->orWhere('user_id',$following['following_id'])
-            ->with('user')->with('comments')->withCount('comments')->orderBy('updated_at','desc')->get();
+            ->with('user')->with('comments')->withCount('comments')->orderBy('updated_at','desc')->paginate(10);
             return $tweets;
         }
-        
-        
-        
+
     }
 }

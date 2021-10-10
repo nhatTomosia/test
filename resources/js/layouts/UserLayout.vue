@@ -308,11 +308,7 @@ export default {
     watch(finished ,(currentValue, oldValue) => { 
         if(finished.value == true) {
           $("#closeNewTweet").click();
-          $q.notify({
-            message: 'Tweet has been posted!',
-            color: 'blue',
-            position: 'top'
-          });
+         
           
       }
     });

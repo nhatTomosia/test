@@ -19472,8 +19472,7 @@ __webpack_require__.r(__webpack_exports__);
     var authToken = $q.cookies.get('authToken');
 
     if (authToken) {
-      store.commit('setAuthToken', authToken);
-      store.commit('setUser', authToken);
+      store.dispatch('fetchUserDetail', authToken);
     }
   }
 });
@@ -19509,12 +19508,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+/* harmony import */ var quasar__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! quasar */ "./node_modules/quasar/dist/quasar.esm.prod.js");
+
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   setup: function setup() {
-    var store = (0,vuex__WEBPACK_IMPORTED_MODULE_1__.useStore)();
+    var $q = (0,quasar__WEBPACK_IMPORTED_MODULE_1__.useQuasar)();
+    var store = (0,vuex__WEBPACK_IMPORTED_MODULE_2__.useStore)();
     var finished = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
       return store.state.finishedTweet;
     });
@@ -19532,10 +19534,22 @@ __webpack_require__.r(__webpack_exports__);
 
     function newTweet() {
       axios.post('/api/new-tweet', tweet).then(function (response) {
-        store.commit('addTweets', response.data);
         tweet.content = '';
         tweet.media_source = '';
+        store.commit('addTweet', response.data);
         store.commit('finishTweet', true);
+        $q.notify({
+          message: 'Tweet has been posted!',
+          color: 'blue',
+          position: 'top',
+          actions: [{
+            label: 'View',
+            color: 'white',
+            handler: function handler() {
+              /* ... */
+            }
+          }]
+        });
       }).then(store.commit('finishTweet', false));
     }
 
@@ -19711,11 +19725,6 @@ __webpack_require__.r(__webpack_exports__);
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(finished, function (currentValue, oldValue) {
       if (finished.value == true) {
         $("#closeNewTweet").click();
-        $q.notify({
-          message: 'Tweet has been posted!',
-          color: 'blue',
-          position: 'top'
-        });
       }
     });
 
@@ -21670,31 +21679,15 @@ var store = (0,vuex__WEBPACK_IMPORTED_MODULE_0__.createStore)({
       user: '',
       authToken: '',
       finishedTweet: false,
-      followers: [],
-      followings: [],
       connect: [],
-      tweets: []
+      tweets: [],
+      pagesCount: null,
+      newsFeedPageNumber: 1
     };
   },
   mutations: {
     toggleMessage: function toggleMessage(state) {
       state.messageToggled = !state.messageToggled;
-    },
-    fetchFollowers: function fetchFollowers(state, user) {
-      axios.post('api/followers', user).then(function (response) {
-        state.followers = response.data;
-      });
-    },
-    removeFollowers: function removeFollowers(state) {
-      state.followers = [];
-    },
-    fetchFollowings: function fetchFollowings(state, user) {
-      axios.post('/api/following', user).then(function (response) {
-        state.followings = response.data;
-      });
-    },
-    removeFollowings: function removeFollowings(state) {
-      state.followings = [];
     },
     finishTweet: function finishTweet(state, _boolean) {
       state.finishedTweet = _boolean;
@@ -21706,6 +21699,9 @@ var store = (0,vuex__WEBPACK_IMPORTED_MODULE_0__.createStore)({
         }
       }).then(function (response) {
         state.user = response.data;
+        axios.post('/api/connect', response.data).then(function (response) {
+          state.connect = response.data;
+        });
       });
     },
     loginUser: function loginUser(state, user) {
@@ -21714,24 +21710,24 @@ var store = (0,vuex__WEBPACK_IMPORTED_MODULE_0__.createStore)({
     removeUser: function removeUser(state) {
       state.user = '';
     },
-    getTweets: function getTweets(state, user) {
-      axios.post('/api/newsfeed', user).then(function (response) {
-        state.tweets = response.data;
+    resetNewsFeed: function resetNewsFeed(state) {
+      state.newsFeedPageNumber = 1;
+      state.tweets = [];
+    },
+    getTweets: function getTweets(state) {
+      axios.post('/api/newsfeed?page=' + state.newsFeedPageNumber, state.user).then(function (response) {
+        $.each(response.data.data, function (key, value) {
+          state.tweets.push(value);
+        });
+        state.newsFeedPageNumber++;
+        state.pagesCount = response.data.last_page;
       });
     },
     addTweet: function addTweet(state, tweet) {
       state.tweets.unshift(tweet);
     },
-    removeTweet: function removeTweet(state, tweet) {
-      state.tweets.splice(tweet.index);
-    },
-    removeTweets: function removeTweets(state) {
-      state.tweets = [];
-    },
-    getConnect: function getConnect(state, user) {
-      axios.post('/api/connect', user).then(function (response) {
-        state.connect = response.data;
-      });
+    deleteTweet: function deleteTweet(state, tweet) {
+      state.tweets.splice(state.tweets.indexOf(tweet), 1);
     },
     removeConnect: function removeConnect(state) {
       state.connect = [];
@@ -21746,12 +21742,14 @@ var store = (0,vuex__WEBPACK_IMPORTED_MODULE_0__.createStore)({
   actions: {
     logout: function logout(_ref) {
       var commit = _ref.commit;
-      commit('removeTweets');
-      commit('removeFollowers');
-      commit('removeFollowings');
       commit('removeConnect');
       commit('removeUser');
       commit('removeAuthToken');
+    },
+    fetchUserDetail: function fetchUserDetail(_ref2, authToken) {
+      var commit = _ref2.commit;
+      commit('setAuthToken', authToken);
+      commit('setUser', authToken);
     }
   },
   getters: function getters() {}

@@ -58,8 +58,10 @@
 <script>
 import {ref, reactive, computed} from 'vue'
 import {useStore} from 'vuex'
+import {useQuasar} from 'quasar'
 export default {
     setup() {
+        const $q = useQuasar();
         const store = useStore();
         const finished = computed(() => store.state.finishedTweet);
         const user = computed(() => store.state.user);
@@ -71,12 +73,20 @@ export default {
         const tweetLength = computed(() => tweet.content.length)
         function newTweet() {
             axios.post('/api/new-tweet',tweet).then(response => {
-                store.commit('addTweets',response.data);
                 tweet.content='';
                 tweet.media_source = '';
+                store.commit('addTweet',response.data);
                 store.commit('finishTweet',true);
-            }).then(store.commit('finishTweet', false))
-            
+                 $q.notify({
+                    message: 'Tweet has been posted!',
+                    color: 'blue',
+                    position: 'top',
+                    actions: [
+                        { label: 'View', color: 'white', handler: () => { /* ... */ } }
+                    ]
+                    
+                });
+            }).then(store.commit('finishTweet', false)) 
         }
 
         return {

@@ -105,11 +105,18 @@ __webpack_require__.r(__webpack_exports__);
     function register3() {
       axios.post('/api/register2', auth).then(function (response) {
         $q.cookies.set('authToken', response.data, {
-          expires: '1m'
+          expires: '30d'
         });
-        store.commit('setAuthToken', response.data);
-        store.commit('setUser', response.data);
-        router.push('/');
+        axios.get('/api/user', {
+          headers: {
+            'Authorization': "Bearer ".concat(response.data)
+          }
+        }).then(function (res) {
+          store.commit('loginUser', res.data);
+          store.commit('setAuthToken', response.data);
+          store.dispatch('fetchUserDetail', response.data);
+          router.push('/');
+        });
       })["catch"](function (error) {
         errors.password = error.response.data;
       });

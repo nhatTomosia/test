@@ -200,10 +200,18 @@ export default {
 
     function register3() {
       axios.post('/api/register2',auth).then(response => {
-        $q.cookies.set('authToken', response.data, {expires: '1m'});
-        store.commit('setAuthToken',response.data);
-        store.commit('setUser',response.data);
-        router.push('/');
+       $q.cookies.set('authToken', response.data, {expires: '30d'});
+        axios.get('/api/user', {
+              headers:{
+              'Authorization': `Bearer ${response.data}`
+              }
+        }).then(res => {
+          store.commit('loginUser',res.data);
+          store.commit('setAuthToken', response.data);
+          store.dispatch('fetchUserDetail', response.data);
+          router.push('/');
+          
+        })
       }).catch(error => {
           errors.password = error.response.data
       });

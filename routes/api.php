@@ -33,6 +33,7 @@ Route::post('forgot-password',[AuthController::class, 'forgotPassword']);
 
 Route::post('new-tweet',[TweetController::class, 'new']);
 Route::post('tweets',[TweetController::class, 'fetch']);
+Route::post('delete-tweet',[TweetController::class, 'delete']);
 Route::post('newsfeed',[TweetController::class, 'newsfeed']);
 
 Route::post('connect', [FollowerController::class, 'connect']);

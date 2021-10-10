@@ -51,15 +51,7 @@
                         <q-infinite-scroll>
                             <div v-for="tweet in tweets.detail" :key="tweet.id">
                                 <Tweet
-                                :username="tweet.user.username"
-                                :name="tweet.user.name"
-                                :date="tweet.updated_at"
-                                :content="tweet.content"
-                                :likes="tweet.likes"
-                                :media_source="tweet.media_source"
-                                :retweets="tweet.retweets"
-                                :comments_count="tweet.comments_count"
-                                :comments="tweet.comments"
+                                :tweet="tweet"
                                 ></Tweet>
                                 <q-separator></q-separator>
                             </div>
@@ -72,15 +64,7 @@
                     <q-separator></q-separator>
                     <div v-for="tweet in tweets.detail" :key="tweet.id">
                         <Tweet
-                        :username="tweet.user.username"
-                        :name="tweet.user.name"
-                        :date="tweet.updated_at"
-                        :content="tweet.content"
-                        :likes="tweet.likes"
-                        :media_source="tweet.media_source"
-                        :retweets="tweet.retweets"
-                        :comments_count="tweet.comments_count"
-                        :comments="tweet.comments"
+                        :tweet="tweet"
                         ></Tweet>
                         <q-separator></q-separator>
                     </div>
@@ -91,15 +75,7 @@
                 </q-tab-panel>
                 <q-tab-panel name="likes">
                     <Tweet 
-                    :username="tweet.user.username"
-                    :name="tweet.user.name"
-                    :date="tweet.updated_at"
-                    :content="tweet.content"
-                    :likes="tweet.likes"
-                    :media_source="tweet.media_source"
-                    :retweets="tweet.retweets"
-                    :comments_count="tweet.comments_count"
-                    :comments="tweet.comments"
+                    :tweet="tweet"
                     ></Tweet>
                     <q-separator></q-separator>
                 </q-tab-panel>
@@ -132,10 +108,10 @@ export default {
             return moment(date).format("MMM YYYY");
         }
 
-        const followers = computed(() =>store.state.followers.detail);
-        const followings = computed(() =>store.state.followings.detail);
-        const followers_count =computed(() => store.state.followers.count);
-        const followings_count =computed(() => store.state.followings.count);
+        const followers = computed(() =>store.state.user.followers);
+        const followings = computed(() =>store.state.user.followings);
+        const followers_count =computed(() => store.state.user.followers.length);
+        const followings_count =computed(() => store.state.user.followings.length);
         
         axios.post('/api/tweets',user.value).then(response => {
             tweets.value = response.data;

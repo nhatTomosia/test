@@ -7,24 +7,19 @@
   <template #content>
       <NewTweet></NewTweet>
       <q-separator class=" q-mt-md"></q-separator>
-      <q-list>    
-        <q-infinite-scroll v-if="tweets">
+      <q-infinite-scroll  @load="onLoad"  v-if="tweets">
           <div v-for="tweet in tweets" :key="tweet.id">
             <Tweet
-              :username="tweet.user.username"
-              :name="tweet.user.name"
-              :date="tweet.updated_at"
-              :content="tweet.content"
-              :likes="tweet.likes"
-              :media_source="tweet.media_source"
-              :retweets="tweet.retweets"
-              :comments_count="tweet.comments_count"
-              :comments="tweet.comments"
+              :tweet="tweet"
               ></Tweet>
               <q-separator></q-separator>
           </div>
+          <template v-slot:loading v-if="pagesCount >= newsFeedPageNumber || !pagesCount">
+            <div class="row justify-center q-my-md">
+              <q-spinner-dots color="primary" size="40px" />
+            </div>
+        </template>
       </q-infinite-scroll>
-    </q-list>
   </template>
 </user-layout>
 </template>
@@ -43,16 +38,31 @@ export default {
 setup() {
   const store = useStore();
   const user = computed(() =>store.state.user);
-  store.commit('fetchFollowers', user.value);
-  store.commit('fetchFollowings',user.value);
-  store.commit('getTweets',user.value);
-  store.commit('getConnect',user.value);
-  const tweets = computed(() =>store.state.tweets);
+  const newsFeedPageNumber = computed(() => store.state.newsFeedPageNumber);
+  const pagesCount = computed(() => store.state.pagesCount);
+  store.commit('resetNewsFeed')
+  store.commit('getTweets');
+
+  const tweets = computed(() => store.state.tweets);
+
+ 
   return {
       user,
       tweets,
+      pagesCount,
+      newsFeedPageNumber,
+      onLoad(index, done) {
+        setTimeout(() =>{
+          if(newsFeedPageNumber.value <= pagesCount.value){
+            store.commit('getTweets');
+          }
+        done();
+        },1000)
+      },
+      
   }
 }
+
 }
 </script>
 

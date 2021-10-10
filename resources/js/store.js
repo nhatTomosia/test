@@ -6,31 +6,16 @@ const store = createStore({
             user:'',
             authToken:'',
             finishedTweet:false,
-            followers:[],
-            followings:[],
             connect: [],
             tweets: [],
+            pagesCount: null,
+            newsFeedPageNumber: 1
         }
     },
     mutations: {
+        
         toggleMessage(state) {
             state.messageToggled = !state.messageToggled;
-        },
-        fetchFollowers(state, user) {
-            axios.post('api/followers',user).then(response => {
-                state.followers = response.data;
-            });
-        },
-        removeFollowers(state){
-            state.followers =[];
-        },
-        fetchFollowings(state, user) {
-            axios.post('/api/following',user).then(response => {
-                state.followings =response.data;
-            });
-        },
-        removeFollowings(state){
-            state.followings =[];
         },
         finishTweet(state, boolean) {
             state.finishedTweet = boolean;
@@ -42,7 +27,11 @@ const store = createStore({
                 }
             }).then(response=> {
                 state.user = response.data;
+                axios.post('/api/connect', response.data).then(response => {
+                    state.connect = response.data;
+                })  
             })
+            
         },
         loginUser(state,user) {
             state.user = user;
@@ -50,24 +39,27 @@ const store = createStore({
         removeUser(state) {
             state.user = '';
         },
-        getTweets(state,user){
-            axios.post('/api/newsfeed', user).then(response => {
-                state.tweets = response.data;
-            })
-        },
-        addTweet(state,tweet) {
-            state.tweets.unshift(tweet);
-        },
-        removeTweet(state,tweet) {
-            state.tweets.splice(tweet.index);
-        },
-        removeTweets(state){
+
+        resetNewsFeed(state) {
+            state.newsFeedPageNumber = 1;
             state.tweets = [];
         },
-        getConnect(state, user) {
-            axios.post('/api/connect',user).then(response => {
-                state.connect = response.data;
-              })   
+        getTweets(state) {
+            axios.post('/api/newsfeed?page=' + state.newsFeedPageNumber , state.user)
+            .then(response => {
+                $.each(response.data.data, (key, value) => {
+                    state.tweets.push(value);
+                })
+                state.newsFeedPageNumber++;
+                state.pagesCount = response.data.last_page;
+            })
+        },
+        
+        addTweet(state,tweet) {
+            state.tweets.unshift(tweet)
+        },
+        deleteTweet(state, tweet) {
+            state.tweets.splice(state.tweets.indexOf(tweet),1);
         },
         removeConnect(state){
             state.connect=[];
@@ -82,13 +74,15 @@ const store = createStore({
     },
     actions: {
         logout({commit}){
-            commit('removeTweets');
-            commit('removeFollowers');
-            commit('removeFollowings');
             commit('removeConnect');
             commit('removeUser');
             commit('removeAuthToken');
         },
+
+        fetchUserDetail({commit}, authToken) {            
+            commit('setAuthToken',authToken);
+            commit('setUser', authToken);
+        }
     },
     getters() {
 

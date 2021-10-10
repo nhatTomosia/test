@@ -17,10 +17,10 @@ export default {
             $q.dark.set(true);
         }
         const authToken = $q.cookies.get('authToken');
-        if(authToken){
-            store.commit('setAuthToken', authToken);
-            store.commit('setUser', authToken);
+        if(authToken) {
+            store.dispatch('fetchUserDetail',authToken);
         }
+        
         
         
 

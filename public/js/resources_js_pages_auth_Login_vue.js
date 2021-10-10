@@ -67,6 +67,7 @@ __webpack_require__.r(__webpack_exports__);
         }).then(function (res) {
           store.commit('loginUser', res.data);
           store.commit('setAuthToken', response.data);
+          store.dispatch('fetchUserDetail', response.data);
           router.push('/');
         });
       })["catch"](function (error) {

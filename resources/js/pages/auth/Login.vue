@@ -105,8 +105,7 @@ export default {
      
     }
     function login1() {
-      axios.post('/api/login1',auth).then(response => {
-          
+      axios.post('/api/login1',auth).then(response => { 
           $q.cookies.set('authToken', response.data, {expires: '30d'});
           axios.get('/api/user', {
                 headers:{
@@ -115,6 +114,7 @@ export default {
           }).then(res => {
             store.commit('loginUser',res.data);
             store.commit('setAuthToken', response.data);
+            store.dispatch('fetchUserDetail', response.data);
             router.push('/');
             
           })              

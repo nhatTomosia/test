@@ -11,13 +11,13 @@
             <q-item-section class="">
               <q-item-label>
                 <router-link to="/" class="font-bold hover:underline q-mr-xs">
-                    {{name}}
+                    {{tweet.user.name}}
                 </router-link>
                 <router-link to="/" class="stretched-link hover:underline q-mr-xs text-secondary" >
-                    {{username}}
+                    {{tweet.user.username}}
                 </router-link>
                 <span class=" q-mr-xs text-secondary" >
-                    &middot; {{ago(date)}}
+                    &middot; {{ago(tweet.updated_at)}}
                 </span>
               </q-item-label>
             </q-item-section>
@@ -25,48 +25,55 @@
             <q-item-section side top>
               <q-btn-dropdown class="bg-transparent" unelevated rounded size="xs" dropdown-icon="fas fa-ellipsis-h">
                 <q-list>
-                  <q-item v-close-popup clickable>
-                    <q-item-section>
-                      <q-item-label>Not interested in this tweet</q-item-label>
-                    </q-item-section>
-                    
-                  </q-item>
+                  <div v-if="tweet.user.id != user.id">
+                    <q-item v-close-popup clickable>
+                      <q-item-section>
+                        <q-item-label>Not interested in this tweet</q-item-label>
+                      </q-item-section>
+                      
+                    </q-item>
 
-                  <q-item v-close-popup  clickable>
+                    <q-item v-close-popup  clickable>
+                      <q-item-section>
+                        <q-item-label>Unfollow {{tweet.user.username}}</q-item-label>
+                      </q-item-section>
+                      
+                    </q-item>
+                    <q-item v-close-popup  clickable>
+                      <q-item-section>
+                        <q-item-label>Add/Remove {{tweet.user.username}} from Lists</q-item-label>
+                      </q-item-section>
+                      
+                    </q-item>
+                    <q-item v-close-popup  clickable>
+                      <q-item-section>
+                        <q-item-label>Mute {{tweet.user.username}}</q-item-label>
+                      </q-item-section>
+                      
+                    </q-item>
+                    <q-item v-close-popup  clickable>
+                      <q-item-section>
+                        <q-item-label>Block {{tweet.user.username}}</q-item-label>
+                      </q-item-section>
+                      
+                    </q-item>
+                  
+                    <q-item v-close-popup  clickable>
+                      <q-item-section>
+                        <q-item-label>Embed Tweet</q-item-label>
+                      </q-item-section>
+                      
+                    </q-item>
+                    <q-item v-close-popup  clickable>
+                      <q-item-section>
+                        <q-item-label>Report Tweet</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </div>
+                  <q-item @click="deleteTweet" v-close-popup v-else  clickable>
                     <q-item-section>
-                      <q-item-label>Unfollow {{username}}</q-item-label>
+                      <q-item-label>Delete Tweet</q-item-label>
                     </q-item-section>
-                    
-                  </q-item>
-                  <q-item v-close-popup  clickable>
-                    <q-item-section>
-                      <q-item-label>Add/Remove {{username}} from Lists</q-item-label>
-                    </q-item-section>
-                    
-                  </q-item>
-                  <q-item v-close-popup  clickable>
-                    <q-item-section>
-                      <q-item-label>Mute {{username}}</q-item-label>
-                    </q-item-section>
-                    
-                  </q-item>
-                  <q-item v-close-popup  clickable>
-                    <q-item-section>
-                      <q-item-label>Block {{username}}</q-item-label>
-                    </q-item-section>
-                    
-                  </q-item>
-                  <q-item v-close-popup  clickable>
-                    <q-item-section>
-                      <q-item-label>Embed Tweet</q-item-label>
-                    </q-item-section>
-                    
-                  </q-item>
-                  <q-item v-close-popup  clickable>
-                    <q-item-section>
-                      <q-item-label>Report Tweet</q-item-label>
-                    </q-item-section>
-                    
                   </q-item>
                 </q-list>
               </q-btn-dropdown>
@@ -74,31 +81,31 @@
           </q-item>
 
           <q-item style="margin-top:-15px">
-              {{content}}
+              {{tweet.content}}
           </q-item>
-          <router-link v-if="media_source" to="/">
+          <router-link v-if="tweet.media_source" to="/">
             <q-img class="rounded-xl q-mt-md"
-                :src="media_source"
+                :src="tweet.media_source"
             />
           </router-link>
 
           <div class="q-mt-md flex justify-around">
             <q-btn size="sm" unelevated class="bg-transparent text-blue" icon="fas fa-comment">
-              <span class="text-secondary q-ml-md">{{comments_count}}</span>
+              <span class="text-secondary q-ml-md">{{tweet.comments_count}}</span>
               <q-tooltip anchor="top right" self="top right">
                   Reply
               </q-tooltip>
             </q-btn>
 
             <q-btn size="sm" unelevated class=" bg-transparent text-blue" icon="fas fa-retweet">
-                <span class="text-secondary q-ml-md">{{retweets}}</span>
+                <span class="text-secondary q-ml-md">{{tweet.retweets}}</span>
                 <q-tooltip anchor="top right" self="top right">
                     Retweet
                 </q-tooltip>
             </q-btn>
 
             <q-btn size="sm" unelevated class=" bg-transparent text-blue" icon="fas fa-heart">
-                <span class="text-secondary q-ml-md">{{likes}}</span>
+                <span class="text-secondary q-ml-md">{{tweet.likes}}</span>
                 <q-tooltip anchor="top right" self="top right">
                     Like
                 </q-tooltip>
@@ -115,53 +122,48 @@
 </template>
 <script>
 import moment from 'moment'
-
+import {computed} from 'vue'
+import {useStore} from 'vuex';
+import {useQuasar} from 'quasar'
 export default {
   props: {
-    name: {
-      type: String,
-      required: true
-    },
-    username: {
-      type: String,
-      required: true
-    },
-    date: {
-      type: String,
-      required: true
-    },
-    content: {
-      type: String,
-      required: true
-    },
-    media_source: {
-      type: String,
-      required: false
-    },
-    likes: {
-      type: Number,
-      required: true,
-    },
-    retweets: {
-      type: Number,
-      required:true
-    },
-    comments_count: {
-      type: Number,
-      required: true,
-    },
-    comments: {
+    tweet: {
       type: Object,
       required: true,
-    }
+    },
 
   },
 
-  setup() {
+  setup(props) {
+    const $q = useQuasar()
+    const store = useStore();
+    const user = computed(() => store.state.user);
+    const darkStatus = computed(() => $q.dark.isActive)
+    const deleteTweet = () => {
+      $q.dialog({
+          dark: darkStatus.value,
+          title: 'Confirm',
+          message: 'Are you sure you want to delete this Tweet?',
+          cancel: true,
+          }).onOk(() => {
+            axios.post('/api/delete-tweet', props.tweet).then(response => {
+            store.commit('deleteTweet', props.tweet);
+            $q.notify({
+                message: 'Tweet has been deleted!',
+                color: 'blue',
+                position: 'top',
+            });    
+          })
+          })
+      
+    }
+
     function ago(date) {
         return moment(date).fromNow();
     }
     return {
+      user,
+      deleteTweet,
       ago,
     }
   },
